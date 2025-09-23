@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import User from "./models/User.js";
 import { authMiddleware } from "./middleware/auth.js";
+import Driver from "./models/Driver.js";
 
 dotenv.config();
 const app = express();
@@ -49,19 +50,35 @@ app.post("/api/activity", async (req, res) => {
   try {
     const { device_id, battery, screen_state, foreground_app, data_usage_mb } = req.body;
 
+    // ✅ Check if driver already exists
+    let driver = await Driver.findOne({ where: { device_id } });
+
+    if (!driver) {
+      // Auto-register new driver as "unassigned"
+      driver = await Driver.create({
+        name: "Unassigned Driver",
+        device_id,
+        school_id: null  // not yet linked
+      });
+    }
+
+    // ✅ Save phone activity and link it with driver
     const log = await PhoneActivity.create({
       device_id,
       battery,
       screen_state,
       foreground_app,
-      data_usage_mb
+      data_usage_mb,
+      DriverId: driver.id   // associate with driver
     });
 
     res.json({ success: true, data: log });
   } catch (error) {
+    console.error("Error saving activity:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
 
 // 🔹 API: Fetch all activities
 app.get("/api/activity", async (req, res) => {
@@ -144,6 +161,31 @@ app.get("/api/activity", authMiddleware, async (req, res) => {
   }
 });
 
+// 🔹 Get all unassigned drivers (only superadmin should call this)
+app.get("/api/drivers/unassigned", async (req, res) => {
+  try {
+    const drivers = await Driver.findAll({ where: { school_id: null } });
+    res.json({ success: true, data: drivers });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put("/api/drivers/:id/assign", async (req, res) => {
+  try {
+    const { school_id } = req.body;
+    const driver = await Driver.findByPk(req.params.id);
+
+    if (!driver) return res.status(404).json({ success: false, message: "Driver not found" });
+
+    driver.school_id = school_id;
+    await driver.save();
+
+    res.json({ success: true, data: driver });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 
 app.listen(PORT, () => {
