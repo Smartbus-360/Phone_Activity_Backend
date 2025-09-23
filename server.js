@@ -5,10 +5,15 @@ import sequelize from "./config/db.js";
 import PhoneActivity from "./models/PhoneActivity.js";
 import cron from "node-cron";
 import { Op } from "sequelize";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import User from "./models/User.js";
+import { authMiddleware } from "./middleware/auth.js";
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 
 app.use(cors());
 app.use(express.json());
@@ -79,6 +84,60 @@ app.delete("/api/activity/cleanup", async (req, res) => {
       }
     });
     res.json({ success: true, message: `🧹 Deleted ${deleted} old logs` });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { username, password, role, school_id } = req.body;
+    const user = await User.create({ username, password, role, school_id });
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 🔹 Login
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ where: { username } });
+
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
+
+    const token = jwt.sign(
+      { id: user.id, role: user.role, school_id: user.school_id },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.json({ success: true, token, user: { id: user.id, username: user.username, role: user.role, school_id: user.school_id } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get("/api/activity", authMiddleware, async (req, res) => {
+  try {
+    let whereClause = {};
+
+    if (req.user.role !== "superadmin") {
+      // Only logs for that school
+      whereClause = { "$Driver.school_id$": req.user.school_id };
+    }
+
+    const logs = await PhoneActivity.findAll({
+      include: [{ model: Driver, attributes: ["name", "school_id"] }],
+      where: whereClause,
+      order: [["created_at", "DESC"]]
+    });
+
+    res.json({ success: true, data: logs });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
