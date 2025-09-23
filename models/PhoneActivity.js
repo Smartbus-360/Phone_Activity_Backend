@@ -13,9 +13,21 @@ const PhoneActivity = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: false,
     },
-    activity: {
-      type: DataTypes.TEXT,
-      allowNull: true, // आपकी table में nullable है
+    battery: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    screen_state: {
+      type: DataTypes.STRING(10), // "ON" or "OFF"
+      allowNull: true,
+    },
+    foreground_app: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    data_usage_mb: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
     },
     created_at: {
       type: DataTypes.DATE,
