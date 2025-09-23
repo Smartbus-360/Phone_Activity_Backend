@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import sequelize from "./config/db.js";
 import PhoneActivity from "./models/PhoneActivity.js";
+import cron from "node-cron";
+import { Op } from "sequelize";
 
 dotenv.config();
 const app = express();
@@ -17,10 +19,39 @@ sequelize.authenticate()
   .catch(err => console.error("❌ DB Connection Error: ", err));
 
 // 🔹 API: Save phone activity
+// app.post("/api/activity", async (req, res) => {
+//   try {
+//     const { device_id, activity } = req.body;
+//     const log = await PhoneActivity.create({ device_id, activity });
+//     res.json({ success: true, data: log });
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
+
+// // 🔹 API: Fetch all activities
+// app.get("/api/activity", async (req, res) => {
+//   try {
+//     const logs = await PhoneActivity.findAll({ order: [["created_at", "DESC"]] });
+//     res.json({ success: true, data: logs });
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
+
+// 🔹 API: Save phone activity
 app.post("/api/activity", async (req, res) => {
   try {
-    const { device_id, activity } = req.body;
-    const log = await PhoneActivity.create({ device_id, activity });
+    const { device_id, battery, screen_state, foreground_app, data_usage_mb } = req.body;
+
+    const log = await PhoneActivity.create({
+      device_id,
+      battery,
+      screen_state,
+      foreground_app,
+      data_usage_mb
+    });
+
     res.json({ success: true, data: log });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -37,6 +68,39 @@ app.get("/api/activity", async (req, res) => {
   }
 });
 
+// 🔹 API: Manual cleanup of old logs
+app.delete("/api/activity/cleanup", async (req, res) => {
+  try {
+    const deleted = await PhoneActivity.destroy({
+      where: {
+        created_at: {
+          [Op.lt]: new Date(Date.now() - 24 * 60 * 60 * 1000) // older than 1 day
+        }
+      }
+    });
+    res.json({ success: true, message: `🧹 Deleted ${deleted} old logs` });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
+
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
+cron.schedule("0 0 * * *", async () => {
+  try {
+    const deleted = await PhoneActivity.destroy({
+      where: {
+        created_at: {
+          [Op.lt]: new Date(Date.now() - 24 * 60 * 60 * 1000) // older than 1 day
+        }
+      }
+    });
+    console.log(`🧹 Cleaned up ${deleted} old activity logs`);
+  } catch (err) {
+    console.error("Cleanup error:", err);
+  }
+});
+
