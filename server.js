@@ -10,6 +10,7 @@ import bcrypt from "bcrypt";
 import User from "./models/User.js";
 import { authMiddleware } from "./middleware/auth.js";
 import Driver from "./models/Driver.js";
+import School from "./models/School.js";
 
 dotenv.config();
 const app = express();
@@ -89,6 +90,18 @@ app.get("/api/activity", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+app.get("/api/schools", async (req, res) => {
+  try {
+    const schools = await School.findAll({
+      attributes: ["id", "name"], // only return needed fields
+      order: [["name", "ASC"]]
+    });
+    res.json({ success: true, data: schools });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 // 🔹 API: Manual cleanup of old logs
 app.delete("/api/activity/cleanup", async (req, res) => {
