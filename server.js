@@ -181,9 +181,14 @@ app.post("/api/auth/login", async (req, res) => {
 
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-if (password !== user.password) {
+// if (password !== user.password) {
+//   return res.status(401).json({ success: false, message: "Invalid credentials" });
+// }
+    const isMatch = await bcrypt.compare(password, user.password);
+if (!isMatch) {
   return res.status(401).json({ success: false, message: "Invalid credentials" });
 }
+
 
     const token = jwt.sign(
       { id: user.id, role: user.role, school_id: user.school_id },
