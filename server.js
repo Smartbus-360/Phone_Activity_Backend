@@ -102,6 +102,50 @@ app.get("/api/schools", async (req, res) => {
   }
 });
 
+// Create driver (only admin/superadmin)
+app.post("/api/drivers/register", authMiddleware, async (req, res) => {
+  try {
+    if (!["superadmin", "schooladmin"].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    const { name, username, password, school_id } = req.body;
+    const driver = await Driver.create({ name, username, password, school_id });
+    res.json({ success: true, driver });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post("/api/drivers/login", async (req, res) => {
+  try {
+    const { username, password, device_id } = req.body;
+    const driver = await Driver.findOne({ where: { username } });
+
+    if (!driver) return res.status(404).json({ success: false, message: "Driver not found" });
+
+    const isMatch = await bcrypt.compare(password, driver.password);
+    if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
+
+    // Save login activity
+    await PhoneActivity.create({
+      device_id: device_id || driver.device_id,
+      activity: "Driver Login",
+      DriverId: driver.id
+    });
+
+    const token = jwt.sign(
+      { id: driver.id, role: "driver", school_id: driver.school_id },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.json({ success: true, token, driver: { id: driver.id, name: driver.name, school_id: driver.school_id } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 // 🔹 API: Manual cleanup of old logs
 app.delete("/api/activity/cleanup", async (req, res) => {
