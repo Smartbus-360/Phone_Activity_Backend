@@ -111,8 +111,19 @@ app.post("/api/drivers/register", authMiddleware, async (req, res) => {
     }
 
     const { name, username, password, school_id } = req.body;
+    // const driver = await Driver.create({ name, username, password, school_id });
+    // res.json({ success: true, driver });
     const driver = await Driver.create({ name, username, password, school_id });
-    res.json({ success: true, driver });
+res.json({
+  success: true,
+  driver: {
+    id: driver.id,
+    name: driver.name,
+    username: driver.username,
+    school_id: driver.school_id
+  }
+});
+
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
