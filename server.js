@@ -11,6 +11,7 @@ import User from "./models/User.js";
 import { authMiddleware } from "./middleware/auth.js";
 import Driver from "./models/Driver.js";
 import School from "./models/School.js";
+import DriverLoginLog from "./models/DriverLoginLog.js";
 
 dotenv.config();
 const app = express();
@@ -117,6 +118,26 @@ app.post("/api/drivers/register", authMiddleware, async (req, res) => {
   }
 });
 
+// Get login logs (Admin only)
+app.get("/api/drivers/:id/logins", authMiddleware, async (req, res) => {
+  try {
+    if (!["superadmin", "schooladmin"].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    const logs = await DriverLoginLog.findAll({
+      where: { driver_id: req.params.id },
+      order: [["login_time", "DESC"]],
+      limit: 50
+    });
+
+    res.json({ success: true, data: logs });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
 app.post("/api/drivers/login", async (req, res) => {
   try {
     const { username, password, device_id } = req.body;
@@ -128,11 +149,17 @@ app.post("/api/drivers/login", async (req, res) => {
     if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
 
     // Save login activity
-    await PhoneActivity.create({
-      device_id: device_id || driver.device_id,
-      activity: "Driver Login",
-      DriverId: driver.id
-    });
+    // await PhoneActivity.create({
+    //   device_id: device_id || driver.device_id,
+    //   activity: "Driver Login",
+    //   DriverId: driver.id
+    // });
+    await DriverLoginLog.create({
+  driver_id: driver.id,
+  device_id: device_id || driver.device_id,
+  status: "success"
+});
+
 
     const token = jwt.sign(
       { id: driver.id, role: "driver", school_id: driver.school_id },
