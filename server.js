@@ -493,7 +493,7 @@ if (!isMatch) {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
-});   /
+});   
 
    // DRIVER: Login with username + password + device_id
 app.post("/api/drivers/login", async (req, res) => {
