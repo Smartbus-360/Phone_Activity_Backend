@@ -103,22 +103,51 @@ app.post("/api/schools/create", authMiddleware, async (req, res) => {
 
 
 // 🔹 API: Fetch all activities
-app.get("/api/activity", async (req, res) => {
+// app.get("/api/activity", async (req, res) => {
+//   try {
+//     const logs = await PhoneActivity.findAll({ order: [["created_at", "DESC"]] });
+//     res.json({ success: true, data: logs });
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
+// app.get("/api/schools", async (req, res) => {
+//   try {
+//     const schools = await School.findAll({
+//       attributes: ["id", "name"], // only return needed fields
+//       order: [["name", "ASC"]]
+//     });
+//     res.json({ success: true, data: schools });
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
+
+// 🔹 API: Save phone activity (driver must be logged in)
+app.post("/api/activity", async (req, res) => {
   try {
-    const logs = await PhoneActivity.findAll({ order: [["created_at", "DESC"]] });
-    res.json({ success: true, data: logs });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-app.get("/api/schools", async (req, res) => {
-  try {
-    const schools = await School.findAll({
-      attributes: ["id", "name"], // only return needed fields
-      order: [["name", "ASC"]]
+    const { device_id, battery, screen_state, foreground_app, data_usage_mb } = req.body;
+
+    // ✅ Find driver by device_id
+    const driver = await Driver.findOne({ where: { device_id } });
+
+    if (!driver) {
+      return res.status(401).json({ success: false, message: "Driver not logged in" });
+    }
+
+    // ✅ Save phone activity and link it with driver
+    const log = await PhoneActivity.create({
+      device_id,
+      battery,
+      screen_state,
+      foreground_app,
+      data_usage_mb,
+      DriverId: driver.id
     });
-    res.json({ success: true, data: schools });
+
+    res.json({ success: true, data: log });
   } catch (error) {
+    console.error("Error saving activity:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
