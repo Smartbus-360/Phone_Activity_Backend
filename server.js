@@ -626,6 +626,26 @@ app.post("/api/school-admins", authMiddleware, async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+// ✅ Fetch all schools (superadmin only for security, or remove authMiddleware if open)
+app.get("/api/schools", authMiddleware, async (req, res) => {
+  try {
+    // Allow only superadmin to list schools
+    if (req.user.role !== "superadmin") {
+      return res.status(403).json({ success: false, message: "Only superadmin can view schools" });
+    }
+
+    const schools = await School.findAll({
+      attributes: ["id", "name"],
+      order: [["name", "ASC"]],
+    });
+
+    res.json({ success: true, data: schools });
+  } catch (error) {
+    console.error("Error fetching schools:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 
    // ADMIN: Fetch activity logs (scoped by role)
