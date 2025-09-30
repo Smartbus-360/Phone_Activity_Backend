@@ -81,6 +81,26 @@ app.post("/api/activity", async (req, res) => {
   }
 });
 
+// Create School (only superadmin)
+app.post("/api/schools/create", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "superadmin") {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ success: false, message: "School name required" });
+    }
+
+    const school = await School.create({ name });
+    res.json({ success: true, data: school });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
 
 // 🔹 API: Fetch all activities
 app.get("/api/activity", async (req, res) => {
