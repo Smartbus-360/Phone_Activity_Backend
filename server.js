@@ -474,6 +474,27 @@ if (!isMatch) {
   return res.status(401).json({ success: false, message: "Invalid credentials" });
 }
 
+    const token = jwt.sign(
+      { id: user.id, role: user.role, school_id: user.school_id },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        school_id: user.school_id,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});   /
+
    // DRIVER: Login with username + password + device_id
 app.post("/api/drivers/login", async (req, res) => {
   try {
