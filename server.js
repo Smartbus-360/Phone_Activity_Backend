@@ -399,6 +399,11 @@ import School from "./models/School.js";
 import DriverLoginLog from "./models/DriverLoginLog.js";
 import cron from "node-cron";
 
+// ✅ Associations
+Driver.hasMany(PhoneActivity, { foreignKey: "DriverId" });
+PhoneActivity.belongsTo(Driver, { foreignKey: "DriverId" });
+
+
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
