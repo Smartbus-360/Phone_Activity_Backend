@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
+import Driver from "./Driver.js";
 
 const PhoneActivity = sequelize.define(
   "PhoneActivity",
@@ -32,7 +33,7 @@ const PhoneActivity = sequelize.define(
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: "Drivers", // must match table/model name
+      model: "drivers", // must match table/model name
       key: "id",
     },
   },
@@ -42,5 +43,8 @@ const PhoneActivity = sequelize.define(
     timestamps: false,
   }
 );
+
+Driver.hasMany(PhoneActivity, { foreignKey: "DriverId" });
+PhoneActivity.belongsTo(Driver, { foreignKey: "DriverId" });
 
 export default PhoneActivity;
