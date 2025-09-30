@@ -402,6 +402,12 @@ import cron from "node-cron";
 // ✅ Associations
 Driver.hasMany(PhoneActivity, { foreignKey: "DriverId" });
 PhoneActivity.belongsTo(Driver, { foreignKey: "DriverId" });
+School.hasMany(Driver, { foreignKey: "school_id" });
+Driver.belongsTo(School, { foreignKey: "school_id" });
+
+// A School has many Users (schooladmins)
+School.hasMany(User, { foreignKey: "school_id" });
+User.belongsTo(School, { foreignKey: "school_id" });
 
 
 dotenv.config();
