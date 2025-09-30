@@ -48,38 +48,38 @@ sequelize.authenticate()
 // });
 
 // 🔹 API: Save phone activity
-app.post("/api/activity", async (req, res) => {
-  try {
-    const { device_id, battery, screen_state, foreground_app, data_usage_mb } = req.body;
+// app.post("/api/activity", async (req, res) => {
+//   try {
+//     const { device_id, battery, screen_state, foreground_app, data_usage_mb } = req.body;
 
-    // ✅ Check if driver already exists
-    let driver = await Driver.findOne({ where: { device_id } });
+//     // ✅ Check if driver already exists
+//     let driver = await Driver.findOne({ where: { device_id } });
 
-    if (!driver) {
-      // Auto-register new driver as "unassigned"
-      driver = await Driver.create({
-        name: "Unassigned Driver",
-        device_id,
-        school_id: null  // not yet linked
-      });
-    }
+//     if (!driver) {
+//       // Auto-register new driver as "unassigned"
+//       driver = await Driver.create({
+//         name: "Unassigned Driver",
+//         device_id,
+//         school_id: null  // not yet linked
+//       });
+//     }
 
-    // ✅ Save phone activity and link it with driver
-    const log = await PhoneActivity.create({
-      device_id,
-      battery,
-      screen_state,
-      foreground_app,
-      data_usage_mb,
-      DriverId: driver.id   // associate with driver
-    });
+//     // ✅ Save phone activity and link it with driver
+//     const log = await PhoneActivity.create({
+//       device_id,
+//       battery,
+//       screen_state,
+//       foreground_app,
+//       data_usage_mb,
+//       DriverId: driver.id   // associate with driver
+//     });
 
-    res.json({ success: true, data: log });
-  } catch (error) {
-    console.error("Error saving activity:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+//     res.json({ success: true, data: log });
+//   } catch (error) {
+//     console.error("Error saving activity:", error);
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
 
 // Create School (only superadmin)
 app.post("/api/schools/create", authMiddleware, async (req, res) => {
