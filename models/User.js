@@ -8,7 +8,13 @@ const User = sequelize.define("User", {
   username: { type: DataTypes.STRING, allowNull: false, unique: true },
   password: { type: DataTypes.STRING, allowNull: false },
   role: { type: DataTypes.ENUM("superadmin", "schooladmin"), defaultValue: "schooladmin" },
-  school_id: { type: DataTypes.INTEGER, allowNull: false }
+  school_id: { type: DataTypes.INTEGER, allowNull: true,
+               references: {
+    model: "schools",
+    key: "id"
+  },
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE"}
 }, {
   tableName: "users",
   timestamps: true
