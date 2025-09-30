@@ -459,6 +459,21 @@ app.post("/api/drivers/register", authMiddleware, async (req, res) => {
   }
 });
 
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ where: { username } });
+
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+// if (password !== user.password) {
+//   return res.status(401).json({ success: false, message: "Invalid credentials" });
+// }
+    const isMatch = await bcrypt.compare(password, user.password);
+if (!isMatch) {
+  return res.status(401).json({ success: false, message: "Invalid credentials" });
+}
+
    // DRIVER: Login with username + password + device_id
 app.post("/api/drivers/login", async (req, res) => {
   try {
