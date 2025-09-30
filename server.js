@@ -160,6 +160,12 @@ app.post("/api/drivers/login", async (req, res) => {
     const isMatch = (password === driver.password);
     if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
 
+        if (!driver.device_id || driver.device_id !== device_id) {
+      driver.device_id = device_id;
+      await driver.save();
+    }
+
+
     // Save login activity
     // await PhoneActivity.create({
     //   device_id: device_id || driver.device_id,
@@ -180,6 +186,23 @@ app.post("/api/drivers/login", async (req, res) => {
     );
 
     res.json({ success: true, token, driver: { id: driver.id, name: driver.name, school_id: driver.school_id } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Create a new school
+app.post("/api/schools", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "superadmin") {
+      return res.status(403).json({ success: false, message: "Only superadmin can create schools" });
+    }
+
+    const { name } = req.body;
+
+    const school = await School.create({ name });
+
+    res.json({ success: true, school });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
