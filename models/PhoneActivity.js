@@ -44,7 +44,7 @@ const PhoneActivity = sequelize.define(
   }
 );
 
-Driver.hasMany(PhoneActivity, { foreignKey: "DriverId" });
-PhoneActivity.belongsTo(Driver, { foreignKey: "DriverId" });
+// Driver.hasMany(PhoneActivity, { foreignKey: "DriverId" });
+// PhoneActivity.belongsTo(Driver, { foreignKey: "DriverId" });
 
 export default PhoneActivity;
