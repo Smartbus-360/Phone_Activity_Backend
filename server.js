@@ -82,23 +82,23 @@ sequelize.authenticate()
 // });
 
 // Create School (only superadmin)
-app.post("/api/schools/create", authMiddleware, async (req, res) => {
-  try {
-    if (req.user.role !== "superadmin") {
-      return res.status(403).json({ success: false, message: "Not authorized" });
-    }
+// app.post("/api/schools/create", authMiddleware, async (req, res) => {
+//   try {
+//     if (req.user.role !== "superadmin") {
+//       return res.status(403).json({ success: false, message: "Not authorized" });
+//     }
 
-    const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({ success: false, message: "School name required" });
-    }
+//     const { name } = req.body;
+//     if (!name) {
+//       return res.status(400).json({ success: false, message: "School name required" });
+//     }
 
-    const school = await School.create({ name });
-    res.json({ success: true, data: school });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+//     const school = await School.create({ name });
+//     res.json({ success: true, data: school });
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
 
 
 
@@ -340,14 +340,14 @@ app.get("/api/activity", authMiddleware, async (req, res) => {
 });
 
 // 🔹 Get all unassigned drivers (only superadmin should call this)
-app.get("/api/drivers/unassigned", async (req, res) => {
-  try {
-    const drivers = await Driver.findAll({ where: { school_id: null } });
-    res.json({ success: true, data: drivers });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+// app.get("/api/drivers/unassigned", async (req, res) => {
+//   try {
+//     const drivers = await Driver.findAll({ where: { school_id: null } });
+//     res.json({ success: true, data: drivers });
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
 
 app.put("/api/drivers/:id/assign", async (req, res) => {
   try {
