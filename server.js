@@ -209,10 +209,13 @@ app.post("/api/drivers/login", async (req, res) => {
     const isMatch = (password === driver.password);
     if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
 
-        if (!driver.device_id || driver.device_id !== device_id) {
-      driver.device_id = device_id;
-      await driver.save();
-    }
+    //     if (!driver.device_id || driver.device_id !== device_id) {
+    //   driver.device_id = device_id;
+    //   await driver.save();
+    // }
+
+        driver.device_id = device_id;
+    await driver.save();
 
 
     // Save login activity
@@ -223,7 +226,7 @@ app.post("/api/drivers/login", async (req, res) => {
     // });
     await DriverLoginLog.create({
   driver_id: driver.id,
-  device_id: device_id || driver.device_id,
+  device_id,
   status: "success"
 });
 
@@ -234,7 +237,9 @@ app.post("/api/drivers/login", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.json({ success: true, token, driver: { id: driver.id, name: driver.name, school_id: driver.school_id } });
+    res.json({ success: true, token, driver: { id: driver.id, name: driver.name,username: driver.username,
+        school_id: driver.school_id,
+ device_id:driver.device_id } });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
