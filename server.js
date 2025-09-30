@@ -411,6 +411,10 @@ app.use(express.json());
 sequelize.authenticate()
   .then(() => console.log("✅ MySQL connected successfully"))
   .catch(err => console.error("❌ DB Connection Error: ", err));
+sequelize.sync({ alter: true })
+  .then(() => console.log("✅ All models synchronized with DB"))
+  .catch(err => console.error("❌ Error syncing models:", err));
+
 
    // SUPERADMIN: Create a school
 app.post("/api/schools", authMiddleware, async (req, res) => {
