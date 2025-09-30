@@ -13,7 +13,14 @@ const Driver = sequelize.define("Driver", {
     username: { type: DataTypes.STRING, allowNull: false, unique: true },  // NEW
   password: { type: DataTypes.STRING, allowNull: false },
   device_id: { type: DataTypes.STRING, allowNull: true, unique: true },
-  school_id: { type: DataTypes.INTEGER, allowNull: true }
+  school_id: { type: DataTypes.INTEGER, allowNull: true,
+             references: {
+    model: "schools",
+    key: "id"
+  },
+  onDelete: "SET NULL",
+  onUpdate: "CASCADE"
+}
 }, {
   tableName: "drivers",
   timestamps: true
