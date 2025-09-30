@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
-import Driver from "./Driver.js";
+// import Driver from "./Driver.js";
 
 const PhoneActivity = sequelize.define(
   "PhoneActivity",
