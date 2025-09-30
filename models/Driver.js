@@ -2,7 +2,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 import School from "./School.js";
-import PhoneActivity from "./PhoneActivity.js";
+// import PhoneActivity from "./PhoneActivity.js";
 import bcrypt from "bcrypt";   
 
 
