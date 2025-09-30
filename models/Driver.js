@@ -12,7 +12,7 @@ const Driver = sequelize.define("Driver", {
   name: { type: DataTypes.STRING, allowNull: false },
     username: { type: DataTypes.STRING, allowNull: false, unique: true },  // NEW
   password: { type: DataTypes.STRING, allowNull: false },
-  device_id: { type: DataTypes.STRING, allowNull: false, unique: true },
+  device_id: { type: DataTypes.STRING, allowNull: true, unique: true },
   school_id: { type: DataTypes.INTEGER, allowNull: true }
 }, {
   tableName: "drivers",
