@@ -4,11 +4,6 @@ import sequelize from "../config/db.js";
 const PhoneActivity = sequelize.define(
   "PhoneActivity",
   {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
     device_id: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -33,8 +28,15 @@ const PhoneActivity = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    DriverId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: "Drivers", // must match table/model name
+      key: "id",
+    },
   },
-  {
+  }{
     tableName: "phone_activity",
     timestamps: false,
   }
