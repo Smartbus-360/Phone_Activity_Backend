@@ -36,7 +36,8 @@ const PhoneActivity = sequelize.define(
       key: "id",
     },
   },
-  }{
+  },
+  {
     tableName: "phone_activity",
     timestamps: false,
   }
