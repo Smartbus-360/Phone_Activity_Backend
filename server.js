@@ -585,6 +585,49 @@ app.post("/api/activity", authMiddleware, async (req, res) => {
   }
 });
 
+// SUPERADMIN: Create a School Admin
+app.post("/api/school-admins", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "superadmin") {
+      return res.status(403).json({ success: false, message: "Only superadmin can create school admins" });
+    }
+
+    const { username, password, school_id } = req.body;
+
+    if (!username || !password || !school_id) {
+      return res.status(400).json({ success: false, message: "All fields (username, password, school_id) are required" });
+    }
+
+    // ✅ Check if school exists
+    const school = await School.findByPk(school_id);
+    if (!school) {
+      return res.status(404).json({ success: false, message: "School not found" });
+    }
+
+    // ✅ Create school admin user
+    const user = await User.create({
+      username,
+      password,   // Will be hashed automatically
+      role: "schooladmin",
+      school_id
+    });
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        school_id: user.school_id
+      }
+    });
+  } catch (error) {
+    console.error("Error creating school admin:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
    // ADMIN: Fetch activity logs (scoped by role)
 app.get("/api/activity", authMiddleware, async (req, res) => {
   try {
