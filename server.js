@@ -397,6 +397,7 @@ import { authMiddleware } from "./middleware/auth.js";
 import Driver from "./models/Driver.js";
 import School from "./models/School.js";
 import DriverLoginLog from "./models/DriverLoginLog.js";
+import driverRoutes from "./routes/driverRoutes.js";
 import cron from "node-cron";
 
 // ✅ Associations
@@ -417,6 +418,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/drivers", driverRoutes);
+
 
 // ✅ Test DB connection
 sequelize.authenticate()
