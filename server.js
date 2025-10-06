@@ -416,7 +416,13 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+  origin: ["https://admin.smartbus360.com"], // frontend domain
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+app.options("*", cors());
 app.use(express.json());
 app.use("/api/drivers", driverRoutes);
 
