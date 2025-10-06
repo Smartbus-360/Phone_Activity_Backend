@@ -13,10 +13,13 @@ const Driver = sequelize.define("Driver", {
     username: { type: DataTypes.STRING, allowNull: false, unique: true },  // NEW
   password: { type: DataTypes.STRING, allowNull: false },
   device_id: { type: DataTypes.STRING, allowNull: true, unique: true },
+    institute_name: { type: DataTypes.STRING, allowNull: true }, // ✅ new field
   school_id: { type: DataTypes.INTEGER, allowNull: true,
              references: {
     model: "schools",
-    key: "id"
+    key: "id",
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
   },
   onDelete: "SET NULL",
   onUpdate: "CASCADE"
