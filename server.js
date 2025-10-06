@@ -654,6 +654,145 @@ app.get("/api/schools", authMiddleware, async (req, res) => {
   }
 });
 
+app.put("/api/schools/:id", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "superadmin")
+      return res.status(403).json({ success: false, message: "Only superadmin can update schools" });
+
+    const { name, address } = req.body;
+    const school = await School.findByPk(req.params.id);
+    if (!school)
+      return res.status(404).json({ success: false, message: "School not found" });
+
+    school.name = name || school.name;
+    school.address = address || school.address;
+    await school.save();
+
+    res.json({ success: true, data: school });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete("/api/schools/:id", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "superadmin")
+      return res.status(403).json({ success: false, message: "Only superadmin can delete schools" });
+
+    const deleted = await School.destroy({ where: { id: req.params.id } });
+    if (!deleted)
+      return res.status(404).json({ success: false, message: "School not found" });
+
+    res.json({ success: true, message: "School deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get("/api/school-admins", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "superadmin")
+      return res.status(403).json({ success: false, message: "Only superadmin can view admins" });
+
+    const admins = await User.findAll({
+      where: { role: "schooladmin" },
+      include: [{ model: School, attributes: ["id", "name"] }],
+      attributes: ["id", "username", "role", "school_id", "createdAt"]
+    });
+    res.json({ success: true, data: admins });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+app.put("/api/school-admins/:id", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "superadmin")
+      return res.status(403).json({ success: false, message: "Only superadmin can update admins" });
+
+    const { username, password, school_id } = req.body;
+    const admin = await User.findByPk(req.params.id);
+    if (!admin)
+      return res.status(404).json({ success: false, message: "Admin not found" });
+
+    if (username) admin.username = username;
+    if (password) admin.password = await bcrypt.hash(password, 10);
+    if (school_id) admin.school_id = school_id;
+    await admin.save();
+
+    res.json({ success: true, data: admin });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete("/api/school-admins/:id", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "superadmin")
+      return res.status(403).json({ success: false, message: "Only superadmin can delete admins" });
+
+    const deleted = await User.destroy({ where: { id: req.params.id, role: "schooladmin" } });
+    if (!deleted)
+      return res.status(404).json({ success: false, message: "Admin not found" });
+
+    res.json({ success: true, message: "Admin deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+app.get("/api/drivers", authMiddleware, async (req, res) => {
+  try {
+    let where = {};
+    if (req.user.role === "schooladmin") {
+      where.school_id = req.user.school_id;
+    } else if (req.query.school_id) {
+      where.school_id = req.query.school_id;
+    }
+
+    const drivers = await Driver.findAll({
+      where,
+      include: [{ model: School, attributes: ["id", "name"] }],
+      attributes: ["id", "name", "username", "school_id", "device_id", "createdAt"]
+    });
+    res.json({ success: true, data: drivers });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get("/api/drivers/:id", authMiddleware, async (req, res) => {
+  try {
+    const driver = await Driver.findByPk(req.params.id, {
+      include: [{ model: School, attributes: ["id", "name"] }]
+    });
+
+    if (!driver)
+      return res.status(404).json({ success: false, message: "Driver not found" });
+
+    if (req.user.role === "schooladmin" && driver.school_id !== req.user.school_id)
+      return res.status(403).json({ success: false, message: "Access denied" });
+
+    res.json({ success: true, data: driver });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete("/api/drivers/:id", authMiddleware, async (req, res) => {
+  try {
+    const driver = await Driver.findByPk(req.params.id);
+    if (!driver)
+      return res.status(404).json({ success: false, message: "Driver not found" });
+
+    if (req.user.role === "schooladmin" && driver.school_id !== req.user.school_id)
+      return res.status(403).json({ success: false, message: "Access denied" });
+
+    await driver.destroy();
+    res.json({ success: true, message: "Driver deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 
    // ADMIN: Fetch activity logs (scoped by role)
