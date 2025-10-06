@@ -456,22 +456,53 @@ app.post("/api/drivers/register", authMiddleware, async (req, res) => {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
+    // const { name, username, password, school_id } = req.body;
+    // if (!name || !username || !password || !school_id) {
+    //   return res.status(400).json({ success: false, message: "All fields required" });
+    // }
+
+    // const driver = await Driver.create({ name, username, password, school_id });
+
+    // res.json({
+    //   success: true,
+    //   driver: {
+    //     id: driver.id,
+    //     name: driver.name,
+    //     username: driver.username,
+    //     school_id: driver.school_id,
+    //   },
+    // });
     const { name, username, password, school_id } = req.body;
-    if (!name || !username || !password || !school_id) {
-      return res.status(400).json({ success: false, message: "All fields required" });
-    }
+if (!name || !username || !password || !school_id) {
+  return res.status(400).json({ success: false, message: "All fields required" });
+}
 
-    const driver = await Driver.create({ name, username, password, school_id });
+// ✅ Fetch school to attach its name to driver
+const school = await School.findByPk(school_id);
+if (!school) {
+  return res.status(404).json({ success: false, message: "School not found" });
+}
 
-    res.json({
-      success: true,
-      driver: {
-        id: driver.id,
-        name: driver.name,
-        username: driver.username,
-        school_id: driver.school_id,
-      },
-    });
+// ✅ Create driver with institute_name
+const driver = await Driver.create({
+  name,
+  username,
+  password,
+  school_id,
+  institute_name: school.name, // <--- This auto-fills the institute name
+});
+
+res.json({
+  success: true,
+  driver: {
+    id: driver.id,
+    name: driver.name,
+    username: driver.username,
+    school_id: driver.school_id,
+    institute_name: driver.institute_name, // <--- Return to frontend too
+  },
+});
+
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -583,6 +614,7 @@ console.log("🔍 Checking driver for ID:", req.user.id, "device:", req.body.dev
       screen_state,
       foreground_app,
       data_usage_mb,
+    institute_name: driver.institute_name, // ✅ store directly
       DriverId: driver.id,
     });
 
