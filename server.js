@@ -556,6 +556,30 @@ if (!isMatch) {
   }
 });   
 
+// ✅ Get all activities for a specific driver (used by DriverActivity.js)
+app.get("/api/drivers/:id/activity", authMiddleware, async (req, res) => {
+  try {
+    const driver = await Driver.findByPk(req.params.id);
+    if (!driver)
+      return res.status(404).json({ success: false, message: "Driver not found" });
+
+    // 🟩 School admins can only see activities of their own drivers
+    if (req.user.role === "schooladmin" && driver.school_id !== req.user.school_id)
+      return res.status(403).json({ success: false, message: "Access denied" });
+
+    const logs = await PhoneActivity.findAll({
+      where: { DriverId: req.params.id },
+      order: [["created_at", "DESC"]],
+    });
+
+    res.json({ success: true, data: logs });
+  } catch (error) {
+    console.error("Error fetching driver activity:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
    // DRIVER: Login with username + password + device_id
 app.post("/api/drivers/login", async (req, res) => {
   try {
