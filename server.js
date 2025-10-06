@@ -557,27 +557,72 @@ if (!isMatch) {
 });   
 
 // ✅ Get all activities for a specific driver (used by DriverActivity.js)
+// app.get("/api/drivers/:id/activity", authMiddleware, async (req, res) => {
+//   try {
+//     const driver = await Driver.findByPk(req.params.id);
+//     if (!driver)
+//       return res.status(404).json({ success: false, message: "Driver not found" });
+
+//     // 🟩 School admins can only see activities of their own drivers
+//     if (req.user.role === "schooladmin" && driver.school_id !== req.user.school_id)
+//       return res.status(403).json({ success: false, message: "Access denied" });
+
+//     const logs = await PhoneActivity.findAll({
+//       where: { DriverId: req.params.id },
+//       order: [["created_at", "DESC"]],
+//     });
+
+//     res.json({ success: true, data: logs });
+//   } catch (error) {
+//     console.error("Error fetching driver activity:", error);
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
+// ✅ Get all activities for a specific driver (optimized for frontend)
 app.get("/api/drivers/:id/activity", authMiddleware, async (req, res) => {
   try {
-    const driver = await Driver.findByPk(req.params.id);
+    const driver = await Driver.findByPk(req.params.id, {
+      include: [{ model: School, attributes: ["id", "name"] }],
+    });
+
     if (!driver)
       return res.status(404).json({ success: false, message: "Driver not found" });
 
-    // 🟩 School admins can only see activities of their own drivers
+    // 🟩 Restrict school admins to their own school
     if (req.user.role === "schooladmin" && driver.school_id !== req.user.school_id)
       return res.status(403).json({ success: false, message: "Access denied" });
 
+    // 🟨 Fetch driver activity logs with related driver details
     const logs = await PhoneActivity.findAll({
-      where: { DriverId: req.params.id },
+      where: { DriverId: driver.id },
+      include: [
+        {
+          model: Driver,
+          attributes: ["id", "name", "username", "institute_name", "school_id"],
+          include: [{ model: School, attributes: ["name"] }],
+        },
+      ],
       order: [["created_at", "DESC"]],
     });
 
-    res.json({ success: true, data: logs });
+    // ✅ Response structure includes driver info + activities
+    res.json({
+      success: true,
+      driver: {
+        id: driver.id,
+        name: driver.name,
+        username: driver.username,
+        institute_name: driver.institute_name,
+        school: driver.School ? driver.School.name : null,
+      },
+      activity_logs: logs,
+    });
   } catch (error) {
     console.error("Error fetching driver activity:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
 
 
    // DRIVER: Login with username + password + device_id
