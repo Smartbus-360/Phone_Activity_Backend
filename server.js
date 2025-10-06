@@ -558,6 +558,10 @@ app.post("/api/drivers/login", async (req, res) => {
    // DRIVER: Send phone activity (requires JWT driver role)
 app.post("/api/activity", authMiddleware, async (req, res) => {
   try {
+    console.log("🔍 req.user:", req.user);
+console.log("🔍 req.body:", req.body);
+console.log("🔍 Checking driver for ID:", req.user.id, "device:", req.body.device_id);
+
     if (req.user.role !== "driver") {
       return res.status(403).json({ success: false, message: "Only drivers can send activity" });
     }
@@ -567,7 +571,8 @@ app.post("/api/activity", authMiddleware, async (req, res) => {
       return res.status(400).json({ success: false, message: "device_id is required" });
     }
 
-    const driver = await Driver.findOne({ where: { id: req.user.id, device_id } });
+    // const driver = await Driver.findOne({ where: { id: req.user.id, device_id } });
+    const driver = await Driver.findOne({ where: { id: req.user.id } });
     if (!driver) {
       return res.status(401).json({ success: false, message: "Driver not logged in or device mismatch" });
     }
