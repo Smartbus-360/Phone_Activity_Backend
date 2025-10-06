@@ -418,10 +418,16 @@ const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 
 // app.use(cors());
 app.use(cors({
-  origin: ["https://admin.smartbus360.com"], 
+  origin: [
+    "https://admin.smartbus360.com",
+    "https://phone.smartbus360.com",
+    "http://localhost:3000"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 }));
+
 // app.options("/.*/", cors());
 
 app.use(express.json());
@@ -438,7 +444,7 @@ sequelize.sync({ alter: true })
 
 
    // SUPERADMIN: Create a school
-app.post("/api/schools", authMiddleware, async (req, res) => {
+app.post("/api/schools", authMiddleware(), async (req, res) => {
   try {
     if (req.user.role !== "superadmin") {
       return res.status(403).json({ success: false, message: "Only superadmin can create schools" });
@@ -457,7 +463,7 @@ app.post("/api/schools", authMiddleware, async (req, res) => {
 });
 
    // SCHOOLADMIN / SUPERADMIN: Register a driver
-app.post("/api/drivers/register", authMiddleware, async (req, res) => {
+app.post("/api/drivers/register", authMiddleware(), async (req, res) => {
   try {
     if (!["superadmin", "schooladmin"].includes(req.user.role)) {
       return res.status(403).json({ success: false, message: "Not authorized" });
@@ -586,7 +592,7 @@ if (!isMatch) {
 //   }
 // });
 // ✅ Get all activities for a specific driver (optimized for frontend)
-app.get("/api/drivers/:id/activity", authMiddleware, async (req, res) => {
+app.get("/api/drivers/:id/activity", authMiddleware(), async (req, res) => {
   try {
     const driver = await Driver.findByPk(req.params.id, {
       include: [{ model: School, attributes: ["id", "name"] }],
@@ -675,7 +681,7 @@ app.post("/api/drivers/login", async (req, res) => {
 });
 
    // DRIVER: Send phone activity (requires JWT driver role)
-app.post("/api/activity", authMiddleware, async (req, res) => {
+app.post("/api/activity", authMiddleware(), async (req, res) => {
   try {
     console.log("🔍 req.user:", req.user);
 console.log("🔍 req.body:", req.body);
@@ -714,7 +720,7 @@ console.log("🔍 Checking driver for ID:", req.user.id, "device:", req.body.dev
 });
 
 // SUPERADMIN: Create a School Admin
-app.post("/api/school-admins", authMiddleware, async (req, res) => {
+app.post("/api/school-admins", authMiddleware(), async (req, res) => {
   try {
     if (req.user.role !== "superadmin") {
       return res.status(403).json({ success: false, message: "Only superadmin can create school admins" });
@@ -755,7 +761,7 @@ app.post("/api/school-admins", authMiddleware, async (req, res) => {
   }
 });
 // ✅ Fetch all schools (superadmin only for security, or remove authMiddleware if open)
-app.get("/api/schools", authMiddleware, async (req, res) => {
+app.get("/api/schools", authMiddleware(), async (req, res) => {
   try {
     // Allow only superadmin to list schools
     if (req.user.role !== "superadmin") {
@@ -774,7 +780,7 @@ app.get("/api/schools", authMiddleware, async (req, res) => {
   }
 });
 
-app.put("/api/schools/:id", authMiddleware, async (req, res) => {
+app.put("/api/schools/:id", authMiddleware(), async (req, res) => {
   try {
     if (req.user.role !== "superadmin")
       return res.status(403).json({ success: false, message: "Only superadmin can update schools" });
@@ -794,7 +800,7 @@ app.put("/api/schools/:id", authMiddleware, async (req, res) => {
   }
 });
 
-app.delete("/api/schools/:id", authMiddleware, async (req, res) => {
+app.delete("/api/schools/:id", authMiddleware(), async (req, res) => {
   try {
     if (req.user.role !== "superadmin")
       return res.status(403).json({ success: false, message: "Only superadmin can delete schools" });
@@ -809,7 +815,7 @@ app.delete("/api/schools/:id", authMiddleware, async (req, res) => {
   }
 });
 
-app.get("/api/school-admins", authMiddleware, async (req, res) => {
+app.get("/api/school-admins", authMiddleware(), async (req, res) => {
   try {
     if (req.user.role !== "superadmin")
       return res.status(403).json({ success: false, message: "Only superadmin can view admins" });
@@ -824,7 +830,7 @@ app.get("/api/school-admins", authMiddleware, async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-app.put("/api/school-admins/:id", authMiddleware, async (req, res) => {
+app.put("/api/school-admins/:id", authMiddleware(), async (req, res) => {
   try {
     if (req.user.role !== "superadmin")
       return res.status(403).json({ success: false, message: "Only superadmin can update admins" });
@@ -845,7 +851,7 @@ app.put("/api/school-admins/:id", authMiddleware, async (req, res) => {
   }
 });
 
-app.delete("/api/school-admins/:id", authMiddleware, async (req, res) => {
+app.delete("/api/school-admins/:id", authMiddleware(), async (req, res) => {
   try {
     if (req.user.role !== "superadmin")
       return res.status(403).json({ success: false, message: "Only superadmin can delete admins" });
@@ -859,7 +865,7 @@ app.delete("/api/school-admins/:id", authMiddleware, async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-app.get("/api/drivers", authMiddleware, async (req, res) => {
+app.get("/api/drivers", authMiddleware(), async (req, res) => {
   try {
     let where = {};
     if (req.user.role === "schooladmin") {
@@ -879,7 +885,7 @@ app.get("/api/drivers", authMiddleware, async (req, res) => {
   }
 });
 
-app.get("/api/drivers/:id", authMiddleware, async (req, res) => {
+app.get("/api/drivers/:id", authMiddleware(), async (req, res) => {
   try {
     const driver = await Driver.findByPk(req.params.id, {
       include: [{ model: School, attributes: ["id", "name"] }]
@@ -897,7 +903,7 @@ app.get("/api/drivers/:id", authMiddleware, async (req, res) => {
   }
 });
 
-app.delete("/api/drivers/:id", authMiddleware, async (req, res) => {
+app.delete("/api/drivers/:id", authMiddleware(), async (req, res) => {
   try {
     const driver = await Driver.findByPk(req.params.id);
     if (!driver)
@@ -916,7 +922,7 @@ app.delete("/api/drivers/:id", authMiddleware, async (req, res) => {
 
 
    // ADMIN: Fetch activity logs (scoped by role)
-app.get("/api/activity", authMiddleware, async (req, res) => {
+app.get("/api/activity", authMiddleware(), async (req, res) => {
   try {
     let whereClause = {};
 
