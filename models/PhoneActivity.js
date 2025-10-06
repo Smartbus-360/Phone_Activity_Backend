@@ -29,6 +29,7 @@ const PhoneActivity = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    institute_name: { type: DataTypes.STRING, allowNull: true }, // ✅ new field
     DriverId: {
     type: DataTypes.INTEGER,
     allowNull: true,
