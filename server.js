@@ -472,7 +472,12 @@ app.post("/api/drivers/register", authMiddleware, async (req, res) => {
     //     school_id: driver.school_id,
     //   },
     // });
-    const { name, username, password, school_id } = req.body;
+    const { name, username, password } = req.body;
+        let school_id = req.body.school_id;
+if (req.user.role === "schooladmin") {
+      school_id = req.user.school_id;
+    }
+
 if (!name || !username || !password || !school_id) {
   return res.status(400).json({ success: false, message: "All fields required" });
 }
@@ -482,6 +487,12 @@ const school = await School.findByPk(school_id);
 if (!school) {
   return res.status(404).json({ success: false, message: "School not found" });
 }
+
+const existing = await Driver.findOne({ where: { username } });
+    if (existing) {
+      return res.status(400).json({ success: false, message: "Username already exists" });
+    }
+
 
 // ✅ Create driver with institute_name
 const driver = await Driver.create({
@@ -494,6 +505,7 @@ const driver = await Driver.create({
 
 res.json({
   success: true,
+  message: "Driver registered successfully",
   driver: {
     id: driver.id,
     name: driver.name,
