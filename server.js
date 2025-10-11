@@ -399,6 +399,8 @@ import School from "./models/School.js";
 import DriverLoginLog from "./models/DriverLoginLog.js";
 import driverRoutes from "./routes/driverRoutes.js";
 import cron from "node-cron";
+import schoolRoutes from "./routes/schoolRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 // ✅ Associations
 Driver.hasMany(PhoneActivity, { foreignKey: "DriverId" });
@@ -636,6 +638,47 @@ app.get("/api/drivers/:id/activity", authMiddleware(), async (req, res) => {
   }
 });
 
+app.get("/api/my-school", authMiddleware(), async (req, res) => {
+  try {
+    if (req.user.role !== "schooladmin")
+      return res.status(403).json({ success: false, message: "Access denied" });
+
+    const school = await School.findByPk(req.user.school_id);
+    if (!school) return res.status(404).json({ success: false, message: "School not found" });
+    res.json({ success: true, data: school });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 📊 Dashboard Stats
+app.get("/api/stats", authMiddleware(), async (req, res) => {
+  try {
+    let schoolCount = 0;
+    let adminCount = 0;
+    let driverCount = 0;
+    let activityCount = 0;
+
+    if (req.user.role === "superadmin") {
+      schoolCount = await School.count();
+      adminCount = await User.count({ where: { role: "schooladmin" } });
+      driverCount = await Driver.count();
+      activityCount = await PhoneActivity.count();
+    } else if (req.user.role === "schooladmin") {
+      driverCount = await Driver.count({ where: { school_id: req.user.school_id } });
+      activityCount = await PhoneActivity.count({
+        include: [{ model: Driver, where: { school_id: req.user.school_id } }],
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { schoolCount, adminCount, driverCount, activityCount },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 
    // DRIVER: Login with username + password + device_id
