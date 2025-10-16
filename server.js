@@ -962,6 +962,32 @@ app.delete("/api/drivers/:id", authMiddleware(), async (req, res) => {
   }
 });
 
+// ✅ Update Driver (Superadmin or their own SchoolAdmin)
+app.put("/api/drivers/:id", authMiddleware(), async (req, res) => {
+  try {
+    const driver = await Driver.findByPk(req.params.id);
+    if (!driver)
+      return res.status(404).json({ success: false, message: "Driver not found" });
+
+    // Restrict schooladmin to their own school's drivers
+    if (req.user.role === "schooladmin" && driver.school_id !== req.user.school_id) {
+      return res.status(403).json({ success: false, message: "Access denied" });
+    }
+
+    const { name, username, password } = req.body;
+
+    if (username) driver.username = username;
+    if (name) driver.name = name;
+    if (password) driver.password = await bcrypt.hash(password, 10); // hash if you use bcrypt
+
+    await driver.save();
+    res.json({ success: true, message: "Driver updated successfully", data: driver });
+  } catch (error) {
+    console.error("Error updating driver:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 
    // ADMIN: Fetch activity logs (scoped by role)
